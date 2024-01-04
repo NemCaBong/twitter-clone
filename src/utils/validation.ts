@@ -3,7 +3,7 @@ import { body, validationResult, ValidationChain } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/src/middlewares/schema'
 // can be reused by many routes
 
-// sequential processing, stops running validations chain if the previous one fails.
+// provides a reusable middleware function that can be used to validate incoming requests based on a set of predefined validation rules
 export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // run xong hết các validation
