@@ -1,5 +1,4 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
-import { resolve } from 'path'
 
 export const signToken = ({
   payload,
