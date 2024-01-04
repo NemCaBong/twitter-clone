@@ -1,6 +1,4 @@
 import { createHash } from 'crypto'
-import dotenv from 'dotenv'
-dotenv.config()
 
 export function sha256(content: string) {
   return createHash('sha256').update(content).digest('hex')
