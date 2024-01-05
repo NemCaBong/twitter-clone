@@ -1,4 +1,4 @@
-import { checkSchema } from 'express-validator'
+import { check, checkSchema } from 'express-validator'
 import usersService from '~/services/user.services'
 import { validate } from '~/utils/validation'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -6,6 +6,8 @@ import databaseService from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
 import { verify } from 'crypto'
 import { verifyToken } from '~/utils/jwt'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 export const loginValidator = validate(
   checkSchema(
@@ -188,7 +190,10 @@ export const accessTokenValidator = validate(
             // dùng split để đảm bảo phải gửi kiểu Bearer <access_token>
             const access_token = value.split(' ')[1]
             if (!access_token) {
-              throw new Error(USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED)
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
             }
             // Ký để xem access token có hợp lệ hay không
             const decoded_authorization = await verifyToken({ token: access_token })
@@ -199,5 +204,25 @@ export const accessTokenValidator = validate(
       }
     },
     ['headers']
+  )
+)
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
+        },
+        custom: {
+          options: async (value, { req }) => {
+            const decoded_refresh_token = await verifyToken({ token: value })
+            req.decoded_refresh_token = decoded_refresh_token
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )
