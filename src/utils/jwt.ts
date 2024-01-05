@@ -1,5 +1,7 @@
 import { config } from 'dotenv'
-import jwt, { SignOptions } from 'jsonwebtoken'
+import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken'
+import { reject } from 'lodash'
+import { resolve } from 'path'
 config()
 export const signToken = ({
   payload,
@@ -18,6 +20,22 @@ export const signToken = ({
       // chắc chắn token phải là string thì mới resolve về
       // thế nên có thể as string ở đây
       resolve(token as string)
+    })
+  })
+}
+
+export const verifyToken = ({
+  token,
+  secretOrPublicKey = process.env.JWT_SECRET as string
+}: {
+  token: string
+  secretOrPublicKey?: string
+}) => {
+  return new Promise<JwtPayload>((resolve, reject) => {
+    jwt.verify(token, secretOrPublicKey, (err, decoded) => {
+      if (err) throw reject(err)
+
+      resolve(decoded as JwtPayload)
     })
   })
 }
