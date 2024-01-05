@@ -2,12 +2,13 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
 /**
  * Có 2 loại lỗi:
- * Lỗi thường
+ *  - Lỗi thường
  * {
  *   message: string
+ *   status: number
  *   error_info?: any
  * }
- * Lỗi validation (422)
+ * - Lỗi validation (422)
  * {
  *   message: string,
  *   errors: {
@@ -31,7 +32,7 @@ type ErrorsType = Record<
 >
 
 /**
- * Class của lỗi có status !== 422
+ * Class của lỗi thông thường, tự gửi lên status code
  */
 export class ErrorWithStatus {
   message: string

@@ -4,7 +4,10 @@ import { RunnableValidationChains } from 'express-validator/src/middlewares/sche
 import HTTP_STATUS from '~/constants/httpStatus'
 import { EntityError, ErrorWithStatus } from '~/models/Errors'
 
-// provides a reusable middleware function that can be used to validate incoming requests based on a set of predefined validation rules
+/**
+ * provides a reusable middleware function that can be used to validate incoming requests based on a set of predefined validation rules
+ *
+ */
 export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
   return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     // run xong hết các validation
