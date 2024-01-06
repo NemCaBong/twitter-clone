@@ -5,6 +5,7 @@ import { LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, TokenPayload } fro
 import User from '~/models/schemas/User.schema'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { ObjectId } from 'mongodb'
+import databaseService from '~/services/database.services'
 
 export const loginController = async (req: Request, res: Response) => {
   const user = req.user as User
@@ -24,7 +25,7 @@ export const loginController = async (req: Request, res: Response) => {
  * @returns A JSON response indicating the success of the registration.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
+export const registerController = async (req: Request<ParamsDictionary, unknown, RegisterReqBody>, res: Response) => {
   // ko cần try catch bởi đã wrap trong wrapRequestHandler
   const result = await usersService.register(req.body)
   return res.status(200).json({
@@ -34,7 +35,7 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
+export const logoutController = async (req: Request<ParamsDictionary, unknown, LogoutReqBody>, res: Response) => {
   const { refresh_token } = req.body
   const result = await usersService.logout(refresh_token)
   res.json(result)
@@ -49,6 +50,33 @@ export const refreshTokenController = async (
   const result = await usersService.refreshToken({ user_id, refresh_token })
   return res.json({
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
+    result
+  })
+}
+
+export const emailVerifyTokenController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_email_verify_token as TokenPayload
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+
+  // nếu ko tìm thấy user
+  if (!user) {
+    return res.status(404).json({
+      message: USERS_MESSAGES.USER_NOT_FOUND
+    })
+  }
+
+  // đã verify rồi => Không báo lỗi
+  // Trả về status OK với message thông báo
+  // đã verify trước đó rồi.
+  if (user.email_verify_token === '') {
+    return res.status(200).json({
+      message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE
+    })
+  }
+  // Nếu chưa verified
+  const result = await usersService.verifyEmail(user_id)
+  return res.status(200).json({
+    message: USERS_MESSAGES.EMAIL_VERIFY_SUCCESS,
     result
   })
 }

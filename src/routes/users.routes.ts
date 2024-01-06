@@ -3,10 +3,12 @@ import {
   loginController,
   logoutController,
   refreshTokenController,
+  emailVerifyTokenController,
   registerController
 } from '~/controller/users.controllers'
 import {
   accessTokenValidator,
+  emailVerifyTokenValidator,
   loginValidator,
   refreshTokenValidator,
   registerValidator
@@ -51,5 +53,13 @@ usersRouter.post(
   refreshTokenValidator,
   wrapRequestHandler(refreshTokenController)
 )
+
+/**
+ * Description. Verify email when user click on the link in email
+ * Path: /verify-email
+ * Method: POST
+ * Body: { email_verify_token: string }
+ */
+usersRouter.post('/verify-email', emailVerifyTokenValidator, wrapRequestHandler(emailVerifyTokenController))
 
 export default usersRouter
