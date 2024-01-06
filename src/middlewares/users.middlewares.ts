@@ -1,4 +1,4 @@
-import { check, checkSchema } from 'express-validator'
+import { checkSchema } from 'express-validator'
 import usersService from '~/services/user.services'
 import { validate } from '~/utils/validation'
 import { USERS_MESSAGES } from '~/constants/messages'
@@ -8,6 +8,9 @@ import { verify } from 'crypto'
 import { verifyToken } from '~/utils/jwt'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { JsonWebTokenError } from 'jsonwebtoken'
+import { capitalize } from 'lodash'
+import { Request } from 'express'
 
 export const loginValidator = validate(
   checkSchema(
@@ -22,9 +25,6 @@ export const loginValidator = validate(
         trim: true,
         custom: {
           options: async (value, { req }) => {
-            console.log(req.body.password)
-            console.log(req.body.email)
-            console.log(value)
             const user = await databaseService.users.findOne({
               email: value,
               password: hashPassword(req.body.password)
@@ -195,9 +195,16 @@ export const accessTokenValidator = validate(
                 status: HTTP_STATUS.UNAUTHORIZED
               })
             }
-            // Ký để xem access token có hợp lệ hay không
-            const decoded_authorization = await verifyToken({ token: access_token })
-            req.decoded_authorization = decoded_authorization
+            try {
+              // Ký để xem access token có hợp lệ hay không
+              const decoded_authorization = await verifyToken({ token: access_token })
+              ;(req as Request).decoded_authorization = decoded_authorization
+            } catch (error) {
+              throw new ErrorWithStatus({
+                message: capitalize((error as JsonWebTokenError).message),
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
             return true
           }
         }
@@ -216,9 +223,29 @@ export const refreshTokenValidator = validate(
         },
         custom: {
           options: async (value, { req }) => {
-            const decoded_refresh_token = await verifyToken({ token: value })
-            req.decoded_refresh_token = decoded_refresh_token
-            return true
+            try {
+              // Promise all để đảm bảo 2 việc sau chạy song song
+              const [decoded_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ token: value }),
+                databaseService.refreshTokens.findOne({ token: value })
+              ])
+              if (refresh_token === null) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              ;(req as Request).decoded_refresh_token = decoded_refresh_token
+            } catch (error) {
+              // lỗi từ phía verifyToken
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize(error.message),
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
           }
         }
       }

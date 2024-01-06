@@ -18,10 +18,10 @@ export const defaultErrorHandler = (err: any, req: Request, res: Response, next:
     res.status(err.status || HTTP_STATUS.INTERNAL_SERVER_ERROR).json(omit(err, ['status']))
   }
   // vì nếu throw new Error của JS => Sẽ có stack trace
-  // nên chúng ta phải chuyển enumerable của Error thành false
+  // nên chúng ta phải chuyển enumerable của Error thành true
   // rồi omit ['stack'] để ko trả về stack trace
   Object.getOwnPropertyNames(err).forEach((key) => {
-    Object.defineProperty(key, 'message', { enumerable: false })
+    Object.defineProperty(err, key, { enumerable: true })
   })
   // mặc định là lỗi server nếu là Error của JS
   res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
