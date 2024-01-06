@@ -124,7 +124,7 @@ export const forgotPasswordController = async (
 }
 
 export const verifyForgotPasswordController = async (req: Request, res: Response) => {
-  res.status(200).json({
+  return res.json({
     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
   })
 }
@@ -137,4 +137,18 @@ export const resetPasswordController = async (
   const { password } = req.body
   const result = await usersService.resetPassword(user_id, password)
   return res.json(result)
+}
+
+export const getMeController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  const user = await usersService.getMe(user_id)
+  if (!user) {
+    return res.status(404).json({
+      message: USERS_MESSAGES.USER_NOT_FOUND
+    })
+  }
+  return res.json({
+    message: USERS_MESSAGES.GET_ME_SUCCESS,
+    result: user
+  })
 }
