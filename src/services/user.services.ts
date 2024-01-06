@@ -35,7 +35,7 @@ class UsersService {
     })
   }
 
-  private signForgotVerifyToken(user_id: string) {
+  private signForgotPasswordVerifyToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.EmailVerifyToken },
       privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
@@ -142,7 +142,7 @@ class UsersService {
   }
 
   async forgotPassword(user_id: string) {
-    const forgot_password_token = await this.signForgotVerifyToken(user_id)
+    const forgot_password_token = await this.signForgotPasswordVerifyToken(user_id)
     await databaseService.users.updateOne(
       {
         _id: new ObjectId(user_id)
