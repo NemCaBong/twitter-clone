@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import usersService from '~/services/user.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
+  ForgotPasswordReqBody,
   LoginReqBody,
   LogouttReqBody,
   RefreshTokenReqBody,
@@ -110,4 +111,13 @@ export const resendVerifyEmailController = async (req: Request, res: Response) =
   // resend email
   const result = await usersService.resendVerifyEmail(user_id)
   return res.status(200).json(result)
+}
+
+export const forgotPasswordController = async (
+  req: Request<ParamsDictionary, unknown, ForgotPasswordReqBody>,
+  res: Response
+) => {
+  const { _id } = req.user as User
+  const result = await usersService.forgotPassword((_id as ObjectId).toString())
+  return res.json(result)
 }
