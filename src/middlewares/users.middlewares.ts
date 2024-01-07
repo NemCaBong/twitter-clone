@@ -9,9 +9,11 @@ import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { capitalize } from 'lodash'
-import { Request } from 'express'
+import { NextFunction, Request, RequestHandler } from 'express'
 import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
+import { TokenPayload } from '~/models/requests/User.requests'
+import { UserVerifyStatus } from '~/constants/enums'
 config()
 
 const passwordSchema: ParamSchema = {
@@ -237,20 +239,15 @@ export const accessTokenValidator = validate(
     {
       Authorization: {
         custom: {
-          options: async (value, { req }) => {
-            // Kiểm tra access token từ header Authorization: Bearer <access_token>
-            // dùng split để đảm bảo phải gửi kiểu Bearer <access_token>
-            // nếu ko có value => undefined => chuyển thành chuỗi rỗng
-            // để lỗi đc catch vào status code 401
+          options: async (value: string, { req }) => {
             const access_token = (value || '').split(' ')[1]
             if (!access_token) {
               throw new ErrorWithStatus({
-                message: USERS_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
                 status: HTTP_STATUS.UNAUTHORIZED
               })
             }
             try {
-              // Ký để xem access token có hợp lệ hay không
               const decoded_authorization = await verifyToken({
                 token: access_token,
                 secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
@@ -397,3 +394,16 @@ export const resetPasswordValidator = validate(
     ['body']
   )
 )
+
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decoded_authorization as TokenPayload
+  if (verify !== UserVerifyStatus.Verified) {
+    return next(
+      new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    )
+  }
+  next()
+}

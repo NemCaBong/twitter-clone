@@ -9,6 +9,7 @@ import {
   registerController,
   resendVerifyEmailController,
   resetPasswordController,
+  updateMeController,
   verifyEmailTokenController,
   verifyForgotPasswordController
 } from '~/controller/users.controllers'
@@ -20,6 +21,7 @@ import {
   refreshTokenValidator,
   registerValidator,
   resetPasswordValidator,
+  verifiedUserValidator,
   verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -56,12 +58,7 @@ usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapReq
  * Method: POST
  * Body: { refresh_token: string }
  */
-usersRouter.post(
-  '/refresh-token',
-  refreshTokenValidator,
-  refreshTokenValidator,
-  wrapRequestHandler(refreshTokenController)
-)
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
 
 /**
  * Description. Verify email when user click on the link in email
@@ -116,4 +113,12 @@ usersRouter.post('/reset-password', resetPasswordValidator, wrapRequestHandler(r
  */
 usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
 
+/**
+ * Description. Update my profile
+ * Path: /me
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: UserSchema
+ */
+usersRouter.patch('/me', accessTokenValidator, verifiedUserValidator, wrapRequestHandler(updateMeController))
 export default usersRouter

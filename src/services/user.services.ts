@@ -11,33 +11,33 @@ import { USERS_MESSAGES } from '~/constants/messages'
 config
 
 class UsersService {
-  private signAccessToken(user_id: string) {
+  private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     return signToken({
-      payload: { user_id, token_type: TokenType.AccessToken },
+      payload: { user_id, token_type: TokenType.AccessToken, verify: verify },
       privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN }
     })
   }
 
-  private signRefreshToken(user_id: string) {
+  private signRefreshToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     return signToken({
-      payload: { user_id, token_type: TokenType.RefreshToken },
+      payload: { user_id, token_type: TokenType.RefreshToken, verify: verify },
       privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN }
     })
   }
 
-  private signEmailVerifyToken(user_id: string) {
+  private signEmailVerifyToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     return signToken({
-      payload: { user_id, token_type: TokenType.EmailVerifyToken },
+      payload: { user_id, token_type: TokenType.EmailVerifyToken, verify: verify },
       privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
       options: { expiresIn: process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN }
     })
   }
 
-  private signForgotPasswordVerifyToken(user_id: string) {
+  private signForgotPasswordVerifyToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     return signToken({
-      payload: { user_id, token_type: TokenType.EmailVerifyToken },
+      payload: { user_id, token_type: TokenType.ForgotPasswordToken, verify: verify },
       privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
       options: { expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRES_IN }
     })
@@ -49,21 +49,24 @@ class UsersService {
     return Boolean(result)
   }
 
-  async login(user_id: string) {
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id)
+  async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({ user_id, verify })
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
     )
     return { access_token, refresh_token }
   }
 
-  private signAccessAndRefreshToken(user_id: string) {
-    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+  private signAccessAndRefreshToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    return Promise.all([this.signAccessToken({ user_id, verify }), this.signRefreshToken({ user_id, verify })])
   }
 
   async register(payload: RegisterReqBody) {
     const user_id = new ObjectId()
-    const email_verify_token = await this.signEmailVerifyToken(user_id.toString())
+    const email_verify_token = await this.signEmailVerifyToken({
+      user_id: user_id.toString(),
+      verify: UserVerifyStatus.Unverified
+    })
     await databaseService.users.insertOne(
       new User({
         ...payload,
@@ -74,7 +77,10 @@ class UsersService {
       })
     )
     // tối ưu performance bằng cách sign cả 2 token cùng lúc
-    const [access_token, refresh_token] = await this.signAccessAndRefreshToken(user_id.toString())
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+      user_id: user_id.toString(),
+      verify: UserVerifyStatus.Unverified
+    })
     // lưu refresh token vào database
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token })
@@ -90,11 +96,19 @@ class UsersService {
     }
   }
 
-  async refreshToken({ user_id, refresh_token }: { user_id: string; refresh_token: string }) {
+  async refreshToken({
+    user_id,
+    refresh_token,
+    verify
+  }: {
+    user_id: string
+    refresh_token: string
+    verify: UserVerifyStatus
+  }) {
     // tạo access token mới và refresh token mới và xóa refresh token cũ
     const [new_access_token, new_refresh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id),
+      this.signAccessToken({ user_id, verify }),
+      this.signRefreshToken({ user_id, verify }),
       databaseService.refreshTokens.deleteOne({ token: refresh_token })
     ])
     // lưu refresh token mới vào database
@@ -112,7 +126,7 @@ class UsersService {
     // bởi vì this.signAccessAndRefreshToken(user_id) trả về mảng
     // và chúng ta lại dùng thêm Promise.all lần nữa
     const [token] = await Promise.all([
-      this.signAccessAndRefreshToken(user_id),
+      this.signAccessAndRefreshToken({ user_id, verify: UserVerifyStatus.Verified }),
       databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
         { $set: { email_verify_token: '', updated_at: '$$NOW', verify: UserVerifyStatus.Verified } }
       ])
@@ -125,7 +139,7 @@ class UsersService {
   }
 
   async resendVerifyEmail(user_id: string) {
-    const email_verify_token = await this.signEmailVerifyToken(user_id)
+    const email_verify_token = await this.signEmailVerifyToken({ user_id, verify: UserVerifyStatus.Unverified })
     // giả bộ gửi email
     console.log('Resend email verify token: ', email_verify_token)
 
@@ -141,8 +155,8 @@ class UsersService {
     }
   }
 
-  async forgotPassword(user_id: string) {
-    const forgot_password_token = await this.signForgotPasswordVerifyToken(user_id)
+  async forgotPassword({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    const forgot_password_token = await this.signForgotPasswordVerifyToken({ user_id, verify })
     await databaseService.users.updateOne(
       {
         _id: new ObjectId(user_id)
