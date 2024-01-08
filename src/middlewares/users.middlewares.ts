@@ -14,6 +14,7 @@ import { ObjectId } from 'mongodb'
 import { config } from 'dotenv'
 import { TokenPayload } from '~/models/requests/User.requests'
 import { UserVerifyStatus } from '~/constants/enums'
+import { REGEX_USERNAME } from '~/constants/regex'
 config()
 
 const passwordSchema: ParamSchema = {
@@ -504,18 +505,24 @@ export const updateMeValidator = validate(
         }
       },
       username: {
-        optional: true,
-        isString: {
-          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_STRING
-        },
-        trim: true,
+        custom: {
+          options: async (value, { req }) => {
+            if (!REGEX_USERNAME.test(value)) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USERNAME_INVALID,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
 
-        isLength: {
-          options: {
-            min: 1,
-            max: 50
-          },
-          errorMessage: USERS_MESSAGES.USERNAME_LENGTH
+            const user = await databaseService.users.findOne({ username: value })
+            // nếu có trong db rồi thì báo lỗi
+            if (user) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USERNAME_EXISTED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+          }
         }
       },
       avatar: imageSchema,
