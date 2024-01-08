@@ -3,6 +3,7 @@ import usersService from '~/services/user.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
   ForgotPasswordReqBody,
+  GetProfileReqParams,
   LoginReqBody,
   LogouttReqBody,
   RefreshTokenReqBody,
@@ -17,6 +18,8 @@ import { USERS_MESSAGES } from '~/constants/messages'
 import { ObjectId } from 'mongodb'
 import databaseService from '~/services/database.services'
 import { UserVerifyStatus } from '~/constants/enums'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
 
 export const loginController = async (req: Request<ParamsDictionary, unknown, LoginReqBody>, res: Response) => {
   const user = req.user as User
@@ -159,4 +162,22 @@ export const updateMeController = async (req: Request<ParamsDictionary, unknown,
   const { body } = req
   const result = await usersService.updateMe(user_id, body)
   return res.json({ message: USERS_MESSAGES.UPDATE_ME_SUCCESS, result })
+}
+
+export const getProfileController = async (req: Request<GetProfileReqParams>, res: Response) => {
+  // Đè user: string vào P = ParamsDictionary
+  const { username } = req.params
+  const user = await usersService.getProfile(username)
+
+  if (!user) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_NOT_FOUND,
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  return res.json({
+    message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
+    result: user
+  })
 }
