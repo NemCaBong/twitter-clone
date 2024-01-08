@@ -1,7 +1,9 @@
 import { config } from 'dotenv'
 import { ObjectId } from 'mongodb'
 import { TokenType, UserVerifyStatus } from '~/constants/enums'
+import HTTP_STATUS from '~/constants/httpStatus'
 import { USERS_MESSAGES } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/Errors'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
 import Follower from '~/models/schemas/Follow.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
@@ -269,6 +271,28 @@ class UsersService {
     }
     return {
       message: USERS_MESSAGES.FOLLOWED
+    }
+  }
+
+  async unfollow(user_id: string, unfollowed_user_id: string) {
+    const isFollowedYet = await databaseService.followers.findOne({
+      followed_user_id: new ObjectId(unfollowed_user_id),
+      user_id: new ObjectId(user_id)
+    })
+
+    if (isFollowedYet === null) {
+      return {
+        message: USERS_MESSAGES.NOT_FOLLOWED_YET
+      }
+    }
+
+    await databaseService.followers.deleteOne({
+      followed_user_id: new ObjectId(unfollowed_user_id),
+      user_id: new ObjectId(user_id)
+    })
+
+    return {
+      message: USERS_MESSAGES.UNFOLLOW_SUCCESS
     }
   }
 }
