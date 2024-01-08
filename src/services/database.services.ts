@@ -12,13 +12,7 @@ class DatabaseService {
   private db: Db
   constructor() {
     // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-    this.client = new MongoClient(uri, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true
-      }
-    })
+    this.client = new MongoClient(uri)
     this.db = this.client.db(process.env.DB_NAME)
   }
 
@@ -31,7 +25,7 @@ class DatabaseService {
       console.log('Error ', error)
       throw error
       // Ensures that the client will close when you finish/error
-      await this.client.close()
+      // await this.client.close()
     }
   }
   get users(): Collection<User> {

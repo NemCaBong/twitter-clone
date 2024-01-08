@@ -1,14 +1,14 @@
+import { config } from 'dotenv'
+import { ObjectId } from 'mongodb'
+import { TokenType, UserVerifyStatus } from '~/constants/enums'
+import { USERS_MESSAGES } from '~/constants/messages'
+import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
-import databaseService from './database.services'
-import { RegisterReqBody } from '~/models/requests/User.requests'
+import databaseService from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
-import { TokenType, UserVerifyStatus } from '~/constants/enums'
-import RefreshToken from '~/models/schemas/RefreshToken.schema'
-import { ObjectId } from 'mongodb'
-import { config } from 'dotenv'
-import { USERS_MESSAGES } from '~/constants/messages'
-config
+config()
 
 class UsersService {
   private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -205,6 +205,33 @@ class UsersService {
       { projection: { password: 0, email_verify_token: 0, forgot_password_token: 0 } }
     )
     return user
+  }
+
+  async updateMe(user_id: string, payload: UpdateMeReqBody) {
+    const _payload = payload.date_of_birth ? { ...payload, date_of_birth: new Date(payload.date_of_birth) } : payload
+    const user = await databaseService.users.findOneAndUpdate(
+      {
+        _id: new ObjectId(user_id)
+      },
+      {
+        $set: {
+          ...(_payload as UpdateMeReqBody & { date_of_birth?: Date })
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0
+        }
+      }
+    )
+    return user.value
   }
 }
 const usersService = new UsersService()
