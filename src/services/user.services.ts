@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { TokenType, UserVerifyStatus } from '~/constants/enums'
 import { USERS_MESSAGES } from '~/constants/messages'
 import { RegisterReqBody, UpdateMeReqBody } from '~/models/requests/User.requests'
+import Follower from '~/models/schemas/Follow.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
@@ -72,6 +73,7 @@ class UsersService {
         ...payload,
         _id: user_id,
         email_verify_token,
+        username: `user${user_id.toString()}`,
         date_of_birth: new Date(payload.date_of_birth),
         password: hashPassword(payload.password)
       })
@@ -249,6 +251,25 @@ class UsersService {
       }
     )
     return user
+  }
+
+  async follow(user_id: string, followed_user_id: string) {
+    const follow = await databaseService.followers.findOne({
+      user_id: new ObjectId(user_id),
+      followed_user_id: new ObjectId(followed_user_id)
+    })
+
+    if (!follow) {
+      await databaseService.followers.insertOne(
+        new Follower({ user_id: new ObjectId(user_id), followed_user_id: new ObjectId(followed_user_id) })
+      )
+      return {
+        message: USERS_MESSAGES.FOLLOW_SUCCESS
+      }
+    }
+    return {
+      message: USERS_MESSAGES.FOLLOWED
+    }
   }
 }
 const usersService = new UsersService()
