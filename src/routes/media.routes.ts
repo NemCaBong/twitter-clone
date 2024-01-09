@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { uploadSingleImageController } from '~/controller/media.controllers'
+import { uploadSingleImageController } from '~/controller/medias.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 const mediaRoutes = Router()
 
