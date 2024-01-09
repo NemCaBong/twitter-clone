@@ -4,6 +4,8 @@ import databaseService from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediaRoutes from './routes/media.routes'
 import { initFolderUploads } from './utils/file'
+import { config } from 'dotenv'
+config()
 // connect db
 databaseService.connect()
 initFolderUploads()
@@ -17,7 +19,7 @@ app.use('/medias', mediaRoutes)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use(defaultErrorHandler)
 
-const port = 4000
+const port = process.env.PORT || 4000
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
