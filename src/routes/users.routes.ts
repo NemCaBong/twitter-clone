@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import { get } from 'lodash'
 import {
   changePasswordController,
   followController,
