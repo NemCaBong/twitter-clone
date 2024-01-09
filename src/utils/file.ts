@@ -1,12 +1,13 @@
 import fs from 'fs'
-import path from 'path'
 import { Request } from 'express'
+import { File } from 'formidable'
+import { UPLOAD_TEMP_DIR } from '~/constants/dir'
 
 export const initFolderUploads = () => {
-  if (!fs.existsSync(path.resolve('uploads'))) {
+  if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
     // recursive: true
     // tự tạo folder nếu folder cha chưa có..
-    fs.mkdirSync(path.resolve('uploads'), { recursive: true })
+    fs.mkdirSync(UPLOAD_TEMP_DIR, { recursive: true })
   }
 }
 
@@ -14,7 +15,7 @@ export const handleUploadSingleImage = async (req: Request) => {
   // import CommonJS supported library using ESModule.
   const formidable = (await import('formidable')).default
   const form = formidable({
-    uploadDir: path.resolve('uploads'),
+    uploadDir: UPLOAD_TEMP_DIR,
     keepExtensions: true,
     maxFileSize: 300 * 1024, // 300KB
     maxFiles: 1,
@@ -30,19 +31,25 @@ export const handleUploadSingleImage = async (req: Request) => {
       return valid
     }
   })
-  return new Promise((resolve, reject) => {
+  return new Promise<File>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         // throw trong 1 async callback trong ExpressJS
         // sẽ bị crashed, và chỉ làm cái function bé này lỗi
-        reject(err)
+        return reject(err)
       }
-
       // kiểm tra key image có tồn tại hay không
       if (!files.image) {
-        reject(new Error('File is empty'))
+        return reject(new Error('File is empty'))
       }
-      resolve(files)
+      // lấy về key image
+      resolve((files.image as File[])[0])
     })
   })
+}
+
+export const getNameFromFullname = (fullname: string) => {
+  const namearr = fullname.split('.')
+  namearr.pop()
+  return namearr.join('')
 }
