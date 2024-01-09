@@ -1,11 +1,12 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
+import { USERS_MESSAGES } from '~/constants/messages'
 import mediasService from '~/services/medias.services'
-import { handleUploadSingleImage } from '~/utils/file'
 
 export const uploadSingleImageController = async (req: Request, res: Response) => {
   // bắt được error reject.
-  const result = await mediasService.handleUploadSingleImage(req)
+  const url = await mediasService.handleUploadSingleImage(req)
   return res.json({
-    result
+    message: USERS_MESSAGES.UPLOAD_SUCCESS,
+    result: url
   })
 }

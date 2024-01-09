@@ -53,3 +53,9 @@ export const getNameFromFullname = (fullname: string) => {
   namearr.pop()
   return namearr.join('')
 }
+
+export const getExtensionFromFullname = (fullname: string) => {
+  const namearr = fullname.split('.')
+  namearr.shift()
+  return namearr.join('')
+}
