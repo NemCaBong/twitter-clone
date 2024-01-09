@@ -3,8 +3,10 @@ import usersRouter from '~/routes/users.routes'
 import databaseService from '~/services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediaRoutes from './routes/media.routes'
+import { initFolderUploads } from './utils/file'
 // connect db
 databaseService.connect()
+initFolderUploads()
 
 const app = express()
 app.use(express.json())
