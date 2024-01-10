@@ -60,14 +60,14 @@ export const handleUploadVideo = async (req: Request) => {
     maxFileSize: 50 * 1024 * 1024, // 50MB
     maxFiles: 1,
     filter: function ({ name, originalFilename, mimetype }) {
-      const valid = name === 'image' && Boolean(mimetype?.includes('mp4') || mimetype?.includes('quicktime'))
+      const valid = name === 'video' && Boolean(mimetype?.includes('mp4') || mimetype?.includes('quicktime'))
       if (!valid) {
         form.emit('error' as never, new Error('File type is not supported') as never)
       }
-      // trả về giá trị boolean
       return valid
     }
   })
+
   return new Promise<File[]>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {

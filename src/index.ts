@@ -6,6 +6,7 @@ import mediaRoutes from './routes/media.routes'
 import { initFolderUploads } from './utils/file'
 import { config } from 'dotenv'
 import staticRouter from './routes/static.routes'
+import { UPLOAD_VIDEO_DIR } from './constants/dir'
 config()
 // connect db
 databaseService.connect()
@@ -17,7 +18,7 @@ app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/medias', mediaRoutes)
 app.use('/static', staticRouter)
-
+app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use(defaultErrorHandler)
 
