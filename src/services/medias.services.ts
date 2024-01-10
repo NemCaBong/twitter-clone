@@ -1,12 +1,13 @@
 import { Request } from 'express'
 import sharp from 'sharp'
-import { UPLOAD_DIR } from '~/constants/dir'
-import { getExtensionFromFullname, getNameFromFullname, handleUploadImage } from '~/utils/file'
+import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
+import { getExtensionFromFullname, getNameFromFullname, handleUploadImage, handleUploadVideo } from '~/utils/file'
 import path from 'path'
 import fs from 'fs'
 import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
 import { MediaType } from '~/constants/enums'
+import { Media } from '~/models/Other'
 config()
 class MediaService {
   async uploadImage(req: Request) {
@@ -17,7 +18,7 @@ class MediaService {
       files.map(async (file) => {
         const newFileName = getNameFromFullname(file.newFilename)
         const newFileExtension = getExtensionFromFullname(file.newFilename)
-        const filePath = path.resolve(UPLOAD_DIR, `${newFileName}.${newFileExtension}`)
+        const filePath = path.resolve(UPLOAD_IMAGE_DIR, `${newFileName}.${newFileExtension}`)
         sharp.cache(false)
         // convert to jpeg
         await sharp(file.filepath).jpeg().toFile(filePath)
@@ -31,6 +32,19 @@ class MediaService {
         }
       })
     )
+    return result
+  }
+
+  async uploadVideo(req: Request) {
+    const files = await handleUploadVideo(req)
+    const result: Media[] = files.map((file) => {
+      return {
+        url: isProduction
+          ? `${process.env.HOST}/static/video/${file.newFilename}`
+          : `http://localhost:${process.env.PORT}/static/video/${file.newFilename}`,
+        type: MediaType.Video
+      }
+    })
     return result
   }
 }

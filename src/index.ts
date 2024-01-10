@@ -5,7 +5,6 @@ import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediaRoutes from './routes/media.routes'
 import { initFolderUploads } from './utils/file'
 import { config } from 'dotenv'
-import { UPLOAD_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
 config()
 // connect db
@@ -18,7 +17,6 @@ app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/medias', mediaRoutes)
 app.use('/static', staticRouter)
-// app.use('/static', express.static(UPLOAD_DIR))
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use(defaultErrorHandler)

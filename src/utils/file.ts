@@ -1,22 +1,23 @@
 import fs from 'fs'
 import { Request } from 'express'
 import { File } from 'formidable'
-import { UPLOAD_TEMP_DIR } from '~/constants/dir'
-import path from 'path'
+import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from '~/constants/dir'
 
 export const initFolderUploads = () => {
-  if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
-    // recursive: true
-    // tự tạo folder nếu folder cha chưa có..
-    fs.mkdirSync(UPLOAD_TEMP_DIR, { recursive: true })
-  }
+  ;[UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_TEMP_DIR].forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      // recursive: true
+      // tự tạo folder nếu folder cha chưa có..
+      fs.mkdirSync(dir, { recursive: true })
+    }
+  })
 }
 
 export const handleUploadImage = async (req: Request) => {
   // import CommonJS supported library using ESModule.
   const formidable = (await import('formidable')).default
   const form = formidable({
-    uploadDir: UPLOAD_TEMP_DIR,
+    uploadDir: UPLOAD_IMAGE_TEMP_DIR,
     keepExtensions: true,
     maxFileSize: 300 * 1024, // 300KB
     maxTotalFileSize: 300 * 1024 * 4,
@@ -46,6 +47,36 @@ export const handleUploadImage = async (req: Request) => {
       }
       // lấy về key image
       resolve(files.image as File[])
+    })
+  })
+}
+
+export const handleUploadVideo = async (req: Request) => {
+  // vẫn trả về File[] để sau này có thể nâng cấp
+  const formidable = (await import('formidable')).default
+  const form = formidable({
+    uploadDir: UPLOAD_VIDEO_DIR,
+    keepExtensions: true,
+    maxFileSize: 50 * 1024 * 1024, // 50MB
+    maxFiles: 1,
+    filter: function ({ name, originalFilename, mimetype }) {
+      const valid = name === 'image' && Boolean(mimetype?.includes('mp4') || mimetype?.includes('quicktime'))
+      if (!valid) {
+        form.emit('error' as never, new Error('File type is not supported') as never)
+      }
+      // trả về giá trị boolean
+      return valid
+    }
+  })
+  return new Promise<File[]>((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        return reject(err)
+      }
+      if (!files.video) {
+        return reject(new Error('File is empty'))
+      }
+      resolve(files.video as File[])
     })
   })
 }
