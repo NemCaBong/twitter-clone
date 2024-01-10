@@ -2,6 +2,7 @@ import fs from 'fs'
 import { Request } from 'express'
 import { File } from 'formidable'
 import { UPLOAD_TEMP_DIR } from '~/constants/dir'
+import path from 'path'
 
 export const initFolderUploads = () => {
   if (!fs.existsSync(UPLOAD_TEMP_DIR)) {
@@ -11,14 +12,15 @@ export const initFolderUploads = () => {
   }
 }
 
-export const handleUploadSingleImage = async (req: Request) => {
+export const handleUploadImage = async (req: Request) => {
   // import CommonJS supported library using ESModule.
   const formidable = (await import('formidable')).default
   const form = formidable({
     uploadDir: UPLOAD_TEMP_DIR,
     keepExtensions: true,
     maxFileSize: 300 * 1024, // 300KB
-    maxFiles: 1,
+    maxTotalFileSize: 300 * 1024 * 4,
+    maxFiles: 4,
     filter: function ({ name, originalFilename, mimetype }) {
       // name là key
       // originalFilename là tên file ban đầu
@@ -31,7 +33,7 @@ export const handleUploadSingleImage = async (req: Request) => {
       return valid
     }
   })
-  return new Promise<File>((resolve, reject) => {
+  return new Promise<File[]>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
         // throw trong 1 async callback trong ExpressJS
@@ -43,7 +45,7 @@ export const handleUploadSingleImage = async (req: Request) => {
         return reject(new Error('File is empty'))
       }
       // lấy về key image
-      resolve((files.image as File[])[0])
+      resolve(files.image as File[])
     })
   })
 }

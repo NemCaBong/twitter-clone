@@ -4,9 +4,9 @@ import mediasService from '~/services/medias.services'
 import path from 'path'
 import { UPLOAD_DIR } from '~/constants/dir'
 
-export const uploadSingleImageController = async (req: Request, res: Response) => {
+export const uploadImageController = async (req: Request, res: Response) => {
   // bắt được error reject.
-  const url = await mediasService.handleUploadSingleImage(req)
+  const url = await mediasService.uploadImage(req)
   return res.json({
     message: USERS_MESSAGES.UPLOAD_SUCCESS,
     result: url
@@ -15,7 +15,6 @@ export const uploadSingleImageController = async (req: Request, res: Response) =
 
 export const serveImageController = (req: Request, res: Response) => {
   const { name } = req.params
-  console.log(name)
   return res.sendFile(path.resolve(UPLOAD_DIR, name), (err) => {
     // chủ động response bắt lỗi ở đây.
     if (err) {

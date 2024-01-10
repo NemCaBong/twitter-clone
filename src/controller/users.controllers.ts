@@ -7,7 +7,7 @@ import {
   ForgotPasswordReqBody,
   GetProfileReqParams,
   LoginReqBody,
-  LogouttReqBody,
+  LogoutReqBody,
   RefreshTokenReqBody,
   RegisterReqBody,
   ResetPasswordReqBody,
@@ -59,7 +59,7 @@ export const registerController = async (req: Request<ParamsDictionary, unknown,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const logoutController = async (req: Request<ParamsDictionary, unknown, LogouttReqBody>, res: Response) => {
+export const logoutController = async (req: Request<ParamsDictionary, unknown, LogoutReqBody>, res: Response) => {
   const { refresh_token } = req.body
   const result = await usersService.logout(refresh_token)
   res.json(result)
