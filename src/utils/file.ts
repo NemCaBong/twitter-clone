@@ -2,6 +2,7 @@ import fs from 'fs'
 import { Request } from 'express'
 import { File } from 'formidable'
 import { UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from '~/constants/dir'
+import path from 'path'
 
 export const initFolderUploads = () => {
   ;[UPLOAD_IMAGE_TEMP_DIR, UPLOAD_VIDEO_TEMP_DIR].forEach((dir) => {
@@ -54,8 +55,16 @@ export const handleUploadImage = async (req: Request) => {
 export const handleUploadVideo = async (req: Request) => {
   // vẫn trả về File[] để sau này có thể nâng cấp
   const formidable = (await import('formidable')).default
+  // tạo id ngẫu nhiên cho folder cho file hls
+  const nanoid = (await import('nanoid')).nanoid
+  const newFilename = nanoid()
+
+  // tạo folder cho file hls
+  const folderPath = path.resolve(UPLOAD_VIDEO_DIR, newFilename)
+  fs.mkdirSync(folderPath, { recursive: true })
+
   const form = formidable({
-    uploadDir: UPLOAD_VIDEO_DIR,
+    uploadDir: folderPath,
     keepExtensions: true,
     maxFileSize: 50 * 1024 * 1024, // 50MB
     maxFiles: 1,
@@ -65,6 +74,9 @@ export const handleUploadVideo = async (req: Request) => {
         form.emit('error' as never, new Error('File type is not supported') as never)
       }
       return valid
+    },
+    filename: function (filename, ext) {
+      return `${newFilename}${ext}`
     }
   })
 

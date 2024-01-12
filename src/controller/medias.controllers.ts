@@ -66,3 +66,12 @@ export const uploadVideoController = async (req: Request, res: Response) => {
     result: url
   })
 }
+
+export const uploadHLSVideoController = async (req: Request, res: Response) => {
+  // bắt được error reject.
+  const url = await mediasService.uploadHLSVideo(req)
+  return res.json({
+    message: USERS_MESSAGES.UPLOAD_SUCCESS,
+    result: url
+  })
+}
