@@ -47,6 +47,12 @@ class UsersService {
     })
   }
 
+  async checkEmailExist(email: string) {
+    const result = await databaseService.users.findOne({ email })
+    // tra ve boolean cua result
+    return Boolean(result)
+  }
+
   private async getOauthGoogleToken(code: string) {
     const body = {
       code,
@@ -88,12 +94,6 @@ class UsersService {
       picture: string
       locale: string
     }
-  }
-
-  async checkEmailExist(email: string) {
-    const result = await databaseService.users.findOne({ email })
-    // tra ve boolean cua result
-    return Boolean(result)
   }
 
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {

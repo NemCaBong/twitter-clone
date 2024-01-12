@@ -7,12 +7,14 @@ import { initFolderUploads } from './utils/file'
 import { config } from 'dotenv'
 import staticRouter from './routes/static.routes'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
+import cors from 'cors'
 config()
 // connect db
 databaseService.connect()
 initFolderUploads()
 
 const app = express()
+app.use(cors())
 app.use(express.json())
 // routes
 app.use('/users', usersRouter)

@@ -58,6 +58,29 @@ export const serveVideoStreamController = (req: Request, res: Response) => {
   videoSteams.pipe(res)
 }
 
+export const serveM3u8Controller = (req: Request, res: Response) => {
+  const { id } = req.params
+  // trả về kết quả của file m3u8
+  return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (err) => {
+    if (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      res.status((err as any).status).send('Not found')
+    }
+  })
+  console.log('Đang đc gọi vào đây')
+}
+
+export const serveSegmentController = (req: Request, res: Response) => {
+  const { id, v, segment } = req.params
+  // trả về kết quả của file m3u8
+  return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, v, segment), (err) => {
+    if (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      res.status((err as any).status).send('Not found')
+    }
+  })
+}
+
 export const uploadVideoController = async (req: Request, res: Response) => {
   // bắt được error reject.
   const url = await mediasService.uploadVideo(req)
