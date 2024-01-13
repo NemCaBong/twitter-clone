@@ -3,6 +3,7 @@ import User from '~/models/schemas/User.schema'
 import { config } from 'dotenv'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Follower from '~/models/schemas/Follow.schema'
+import VideoStatus from '~/models/schemas/VideoStatus.schema'
 config()
 
 // Replace the placeholder with your Atlas connection string
@@ -39,6 +40,10 @@ class DatabaseService {
 
   get followers(): Collection<Follower> {
     return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION as string)
+  }
+
+  get videoStatus(): Collection<VideoStatus> {
+    return this.db.collection(process.env.DB_VIDEO_STATUS_COLLECTION as string)
   }
 }
 
