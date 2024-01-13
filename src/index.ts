@@ -11,6 +11,7 @@ import cors from 'cors'
 config()
 // connect db
 databaseService.connect()
+
 initFolderUploads()
 
 const app = express()
