@@ -9,6 +9,7 @@ import staticRouter from './routes/static.routes'
 import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import cors from 'cors'
 import tweetsRouter from './routes/tweets.routes'
+
 config()
 // connect db
 databaseService.connect().then(() => {
