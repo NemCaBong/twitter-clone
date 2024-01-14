@@ -10,7 +10,12 @@ import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import cors from 'cors'
 config()
 // connect db
-databaseService.connect()
+databaseService.connect().then(() => {
+  databaseService.indexUsers()
+  databaseService.indexRefreshTokens()
+  databaseService.indexVideoStatus()
+  databaseService.indexFollowers()
+})
 
 initFolderUploads()
 
