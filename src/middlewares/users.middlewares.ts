@@ -585,3 +585,17 @@ export const changePasswordValidator = validate(
     ['body']
   )
 )
+
+/**
+ * Description. Middleware kế thừa accesstoken và verifiedUser validator
+ * Có đăng nhập thì check không thì không check
+ * Bởi tweet không chỉ cho những người đăng nhập mới được xem
+ */
+export const isUserLoggedInValidator = (middleware: (req: Request, res: Response, next: NextFunction) => void) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    next()
+  }
+}
