@@ -25,7 +25,7 @@ export default class Tweet {
   audience: TweetAudience
   content: string
   parent_id: null | ObjectId // ko sửa chỗ này là string
-  hashtags: ObjectId[]
+  hashtags: ObjectId[] // ObjectId trong bảng hashtags
   mentions: ObjectId[]
   medias: Media[]
   guest_views: number
