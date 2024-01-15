@@ -10,6 +10,7 @@ import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import cors from 'cors'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
+import likesRouter from './routes/likes.routes'
 
 config()
 // connect db
@@ -30,9 +31,9 @@ app.use('/users', usersRouter)
 app.use('/medias', mediaRoutes)
 app.use('/static', staticRouter)
 app.use('/tweets', tweetsRouter)
+app.use('/likes', likesRouter)
 app.use('/bookmarks', bookmarksRouter)
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use(defaultErrorHandler)
 
 const port = process.env.PORT || 4000
