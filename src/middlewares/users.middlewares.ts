@@ -596,6 +596,7 @@ export const isUserLoggedInValidator = (middleware: (req: Request, res: Response
     if (req.headers.authorization) {
       return middleware(req, res, next)
     }
+    console.log('Vào đây')
     next()
   }
 }
