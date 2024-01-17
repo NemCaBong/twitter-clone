@@ -5,7 +5,7 @@ import { NextFunction, Request, RequestHandler, Response } from 'express'
  * @param fn - The request handler function to be wrapped.
  * @returns A new request handler function that handles errors.
  */
-export const wrapRequestHandler = <P>(func: RequestHandler<P>) => {
+export const wrapRequestHandler = <P>(func: RequestHandler<P, any, any, any>) => {
   return async (req: Request<P>, res: Response, next: NextFunction) => {
     try {
       await func(req, res, next)

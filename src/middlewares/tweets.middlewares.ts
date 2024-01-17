@@ -271,10 +271,6 @@ export const tweetIdValidator = validate(
 export const audienceValidator = wrapRequestHandler(async (req: Request, res: Response, next: NextFunction) => {
   const tweet = req.tweet as Tweet
   if (tweet.audience === TweetAudience.TwitterCircle) {
-    // kiểm tra xem đã đăng nhập hay chưa
-    if (!req.headers.authorization) {
-      throw new ErrorWithStatus({ message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED, status: HTTP_STATUS.UNAUTHORIZED })
-    }
     // Kiểm tra status tài khoản tác giả, hoặc bài viết còn tác giả hay không
     const author = await databaseService.users.findOne({ _id: new ObjectId(tweet.user_id) })
 
@@ -288,6 +284,57 @@ export const audienceValidator = wrapRequestHandler(async (req: Request, res: Re
     if (!isInTwitterCircle && !author._id.equals(user_id)) {
       throw new ErrorWithStatus({ message: TWEETS_MESSAGES.TWEET_NOT_PUBLIC, status: HTTP_STATUS.NOT_FOUND })
     }
+
+    // kiểm tra xem đã đăng nhập hay chưa
+    // if (!req.headers.authorization) {
+    //   throw new ErrorWithStatus({ message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED, status: HTTP_STATUS.UNAUTHORIZED })
+    // }
   }
   next()
 })
+
+export const getTweetChildrenValidator = validate(
+  checkSchema(
+    {
+      tweet_type: {
+        isIn: {
+          options: [tweetTypes], // [1,2,3]
+          errorMessage: TWEETS_MESSAGES.INVALID_TYPE
+        }
+      },
+      limit: {
+        isNumeric: true,
+        custom: {
+          options: (value) => {
+            const num = Number(value)
+
+            if (num > 100 || num < 1) {
+              throw new ErrorWithStatus({
+                message: TWEETS_MESSAGES.MAXIMUM_LIMIT_IS_100_AND_MINIMUM_IS_1,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      },
+      page: {
+        isNumeric: true,
+        custom: {
+          options: (value) => {
+            const num = Number(value)
+
+            if (num < 1) {
+              throw new ErrorWithStatus({
+                message: TWEETS_MESSAGES.MINIMUM_PAGE_IS_1,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['query']
+  )
+)

@@ -1,6 +1,12 @@
+import { get } from 'axios'
 import { Router } from 'express'
 import { createTweetController, getTweetChildrenController, getTweetController } from '~/controller/tweets.controller'
-import { audienceValidator, tweetIdValidator, tweetValidator } from '~/middlewares/tweets.middlewares'
+import {
+  audienceValidator,
+  getTweetChildrenValidator,
+  tweetIdValidator,
+  tweetValidator
+} from '~/middlewares/tweets.middlewares'
 import {
   accessTokenValidator,
   isUserLoggedInValidator,
@@ -50,6 +56,7 @@ tweetsRouter.get(
 tweetsRouter.get(
   '/:tweet_id/children',
   tweetIdValidator,
+  getTweetChildrenValidator,
   isUserLoggedInValidator(accessTokenValidator),
   isUserLoggedInValidator(verifiedUserValidator),
   audienceValidator,
