@@ -82,7 +82,8 @@ export const TWEETS_MESSAGES = {
   TWEET_NOT_FOUND: 'Tweet not found',
   TWEET_NOT_PUBLIC: 'Tweet not public',
   MAXIMUM_LIMIT_IS_100_AND_MINIMUM_IS_1: 'Maximum limit is 100 and minimum is 1',
-  MINIMUM_PAGE_IS_1: 'Minimum page is 1'
+  MINIMUM_PAGE_IS_1: 'Minimum page is 1',
+  GET_NEW_FEEDS_SUCCESSFULLY: 'Get new feeds successfully'
 } as const
 
 export const BOOKMARKS_MESSAGES = {

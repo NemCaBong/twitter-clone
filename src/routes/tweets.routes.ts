@@ -1,9 +1,15 @@
 import { get } from 'axios'
 import { Router } from 'express'
-import { createTweetController, getTweetChildrenController, getTweetController } from '~/controller/tweets.controller'
+import {
+  createTweetController,
+  getNewFeedsController,
+  getTweetChildrenController,
+  getTweetController
+} from '~/controller/tweets.controller'
 import {
   audienceValidator,
   getTweetChildrenValidator,
+  paginationValidator,
   tweetIdValidator,
   tweetValidator
 } from '~/middlewares/tweets.middlewares'
@@ -51,16 +57,32 @@ tweetsRouter.get(
  * Path: /:tweet_id/children
  * Method: GET
  * Header: { Authorization?: Bearer <access_token> }
- * Body: { limit: number, page: number, tweet_type: TweetType }
+ * Query: { limit: number, page: number, tweet_type: TweetType }
  */
 tweetsRouter.get(
   '/:tweet_id/children',
   tweetIdValidator,
   getTweetChildrenValidator,
+  paginationValidator,
   isUserLoggedInValidator(accessTokenValidator),
   isUserLoggedInValidator(verifiedUserValidator),
   audienceValidator,
   wrapRequestHandler(getTweetChildrenController)
+)
+
+/**
+ * Description. GET new feeds
+ * Path: /new-feeds
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Query: { limit: number, page: number }
+ */
+tweetsRouter.get(
+  '/',
+  paginationValidator,
+  accessTokenValidator,
+  verifiedUserValidator,
+  wrapRequestHandler(getNewFeedsController)
 )
 
 export default tweetsRouter

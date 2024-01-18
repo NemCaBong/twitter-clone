@@ -11,3 +11,7 @@ User truy cập link đc gửi qua mail => Nhận đc email_verify_token => Tìm
 Khi người dùng mới đăng ký thì trạng thái tài khoản: Unverified.
 
 Khi chung ta sign JWT thi truyen luon trang thai verify cua nguoi dung vao payload. De trong middleware luon nam giu trang thai verify cua nguoi dung.
+
+## Thuật toán dành cho new feeds
+
+Lấy ra các tweet của người mình follow và bản thân mình theo thứ tự thời gian, chưa có gợi ý.

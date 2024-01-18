@@ -1,7 +1,9 @@
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+import { stringify } from 'querystring'
 import { TweetType } from '~/constants/enums'
-import { TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
+import { TWEETS_MESSAGES } from '~/constants/messages'
+import { Pagination, TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
 import { TokenPayload } from '~/models/requests/User.requests'
 import tweetsService from '~/services/tweets.services'
 
@@ -55,6 +57,25 @@ export const getTweetChildrenController = async (
       limit,
       page,
       total_page: Math.ceil(total / limit) // tổng số trang để phân
+    }
+  })
+}
+
+export const getNewFeedsController = async (
+  req: Request<ParamsDictionary, unknown, unknown, Pagination>,
+  res: Response
+) => {
+  const user_id = req.decoded_authorization?.user_id as string
+  const limit = Number(req.query.limit as string)
+  const page = Number(req.query.page as string)
+  const result = await tweetsService.getNewFeeds({ user_id, limit, page })
+  return res.json({
+    message: TWEETS_MESSAGES.GET_NEW_FEEDS_SUCCESSFULLY,
+    result: {
+      tweets: result.tweets,
+      limit,
+      page,
+      total_page: Math.ceil(result.total / limit)
     }
   })
 }
