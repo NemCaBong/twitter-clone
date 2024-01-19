@@ -240,7 +240,7 @@ class SearchService {
     })
     return {
       tweets,
-      total: total[0].total
+      total: total.length === 0 ? 0 : total[0].total
     }
   }
 }
