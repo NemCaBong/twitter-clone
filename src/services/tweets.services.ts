@@ -478,7 +478,7 @@ class TweetsServices {
       tweet.updated_at = date
       tweet.user_views += 1
     })
-    return { tweets, total: total[0].total }
+    return { tweets, total: total[0]?.total || 0 }
   }
 }
 

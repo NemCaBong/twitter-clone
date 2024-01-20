@@ -15,7 +15,8 @@ export const searchController = async (
     page,
     content: req.query.content,
     user_id,
-    media_type: req.query.media_type
+    media_type: req.query.media_type,
+    people_follow: req.query.people_follow
   })
   return res.json({
     message: 'Search success',
