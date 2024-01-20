@@ -60,7 +60,7 @@ class DatabaseService {
     const exists = await this.tweets.indexExists(['content_text'])
     // Nếu không sẽ bị lỗi: index already exists with different options
     if (!exists) {
-      this.tweets.createIndex({ content_text: 'text' }, { default_language: 'none' })
+      this.tweets.createIndex({ content: 'text' }, { default_language: 'none' })
     }
   }
 
