@@ -12,7 +12,8 @@ import databaseService from '~/services/database.services'
 import { hashPassword } from '~/utils/crypto'
 import { signToken, verifyToken } from '~/utils/jwt'
 import axios from 'axios'
-import { verify } from 'crypto'
+import { sendForgotPasswordEmail, sendVerifyRegisterEmail } from '~/utils/email'
+
 config()
 
 class UsersService {
@@ -189,6 +190,8 @@ class UsersService {
       new RefreshToken({ user_id: new ObjectId(user_id), token: refresh_token, iat, exp })
     )
 
+    await sendVerifyRegisterEmail(payload.email, email_verify_token)
+
     return { access_token, refresh_token }
   }
 
@@ -255,10 +258,8 @@ class UsersService {
     }
   }
 
-  async resendVerifyEmail(user_id: string) {
+  async resendVerifyEmail(user_id: string, email: string) {
     const email_verify_token = await this.signEmailVerifyToken({ user_id, verify: UserVerifyStatus.Unverified })
-    // giả bộ gửi email
-    console.log('Resend email verify token: ', email_verify_token)
 
     // cập nhật lại giá trị của email verify token
     await databaseService.users.updateOne(
@@ -267,12 +268,14 @@ class UsersService {
       },
       { $set: { email_verify_token: email_verify_token }, $currentDate: { updated_at: true } }
     )
+    await sendVerifyRegisterEmail(email, email_verify_token)
+
     return {
       message: USERS_MESSAGES.RESEND_VERIFY_EMAIL_SUCCESS
     }
   }
 
-  async forgotPassword({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+  async forgotPassword({ user_id, verify, email }: { user_id: string; verify: UserVerifyStatus; email: string }) {
     const forgot_password_token = await this.signForgotPasswordVerifyToken({ user_id, verify })
     await databaseService.users.updateOne(
       {
@@ -287,8 +290,8 @@ class UsersService {
         }
       }
     )
-    // Gửi email kèm đường link tới email của user
-    console.log('Forgot password token: ', forgot_password_token)
+
+    await sendForgotPasswordEmail(email, forgot_password_token)
     return {
       message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     }

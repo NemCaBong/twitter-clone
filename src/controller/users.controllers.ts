@@ -23,6 +23,7 @@ import databaseService from '~/services/database.services'
 import { UserVerifyStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { Tracing } from 'trace_events'
 
 export const loginController = async (req: Request<ParamsDictionary, unknown, LoginReqBody>, res: Response) => {
   const user = req.user as User
@@ -125,7 +126,7 @@ export const resendVerifyEmailController = async (req: Request, res: Response) =
     })
   }
   // resend email
-  const result = await usersService.resendVerifyEmail(user_id)
+  const result = await usersService.resendVerifyEmail(user_id, user.email)
   return res.status(200).json(result)
 }
 
@@ -133,8 +134,12 @@ export const forgotPasswordController = async (
   req: Request<ParamsDictionary, unknown, ForgotPasswordReqBody>,
   res: Response
 ) => {
-  const { _id, verify } = req.user as User
-  const result = await usersService.forgotPassword({ user_id: (_id as ObjectId).toString(), verify: verify })
+  const { _id, verify, email } = req.user as User
+  const result = await usersService.forgotPassword({
+    user_id: (_id as ObjectId).toString(),
+    verify: verify,
+    email: email
+  })
   return res.json(result)
 }
 
