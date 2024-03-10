@@ -88,6 +88,7 @@ export const handleUploadVideo = async (req: Request) => {
       if (!files.video) {
         return reject(new Error('File is empty'))
       }
+      // trả về 1 array file
       resolve(files.video as File[])
     })
   })
