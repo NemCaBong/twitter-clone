@@ -13,7 +13,7 @@ export const initFolderUploads = () => {
     }
   })
 }
-
+// handle image file từ request gửi lên trong form-data
 export const handleUploadImage = async (req: Request) => {
   // import CommonJS supported library using ESModule.
   const formidable = (await import('formidable')).default

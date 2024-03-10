@@ -12,6 +12,8 @@ import { Media } from '~/models/Other'
 import { encodeHLSWithMultipleVideoStreams } from '~/utils/video'
 import databaseService from './database.services'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
+import { uploadFileToS3 } from '~/utils/s3'
+import mime from 'mime'
 
 config()
 
@@ -31,6 +33,7 @@ class Queue {
     // thêm vào queue xong thì gọi processEncode luôn
     this.processEncode()
   }
+
   async processEncode() {
     // tránh trường hợp nhiều request cùng lúc thực hiện encode
     if (this.encoding) return
@@ -79,16 +82,23 @@ class MediaService {
       files.map(async (file) => {
         const newFileName = getNameFromFullname(file.newFilename)
         const newFileExtension = getExtensionFromFullname(file.newFilename)
-        const filePath = path.resolve(UPLOAD_IMAGE_DIR, `${newFileName}.${newFileExtension}`)
+        const newFullFileName = `${newFileName}.${newFileExtension}`
+        const filePath = path.resolve(UPLOAD_IMAGE_DIR, newFullFileName)
         sharp.cache(false)
         // convert to jpeg
         await sharp(file.filepath).jpeg().toFile(filePath)
-        // xóa file trong temp
-        fs.unlinkSync(file.filepath)
+
+        // upload file to s3
+        const s3Result = await uploadFileToS3({
+          // tự động tạo folder
+          fileName: 'images/' + newFullFileName,
+          filePath: filePath,
+          contentType: mime.getType(newFullFileName) as string
+        })
+
+        Promise.all([fsPromise.unlink(filePath), fsPromise.unlink(file.filepath)])
         return {
-          url: isProduction
-            ? `${process.env.HOST}/static/image/${newFileName}.${newFileExtension}`
-            : `http://localhost:${process.env.PORT}/static/image/${newFileName}.${newFileExtension}`,
+          url: s3Result.Location,
           type: MediaType.Image
         }
       })
