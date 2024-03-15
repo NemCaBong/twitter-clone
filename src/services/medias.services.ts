@@ -1,9 +1,15 @@
 import { Request } from 'express'
 import sharp from 'sharp'
-import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
-import { getExtensionFromFullname, getNameFromFullname, handleUploadImage, handleUploadVideo } from '~/utils/file'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
+import {
+  getExtensionFromFullname,
+  getFilesFromDir,
+  getNameFromFullname,
+  handleUploadImage,
+  handleUploadVideo
+} from '~/utils/file'
 import path from 'path'
-import fs from 'fs'
+
 import fsPromise from 'fs/promises'
 import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
@@ -14,6 +20,7 @@ import databaseService from './database.services'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import { uploadFileToS3 } from '~/utils/s3'
 import mime from 'mime'
+import { rimrafSync } from 'rimraf'
 
 config()
 
@@ -49,9 +56,27 @@ class Queue {
       )
       try {
         await encodeHLSWithMultipleVideoStreams(videoPath)
+        // xóa item trong queue
         this.items.shift()
-        await fsPromise.unlink(videoPath)
+
         console.log(`Encode video ${videoPath} success`)
+        // upload all the hls files to s3
+        const hlsFiles = getFilesFromDir(path.resolve(UPLOAD_VIDEO_DIR, idName))
+        await Promise.all(
+          hlsFiles.map((filePath) => {
+            // loại bỏ đi đường dẫn đến folder uploads, chỉ để lại tên dir chứa files
+            let fileName = 'video-hls' + filePath.replace(UPLOAD_VIDEO_DIR, '')
+            // bỏ đi dấu \ trong đường dẫn đối với windows
+            fileName = fileName.replace(/\\/g, '/')
+            return uploadFileToS3({
+              filePath,
+              fileName,
+              contentType: mime.getType(filePath) as string
+            })
+          })
+        )
+        // xóa folder chứa files hls
+        rimrafSync(path.resolve(UPLOAD_VIDEO_DIR, idName))
         // update status = completed
         await databaseService.videoStatus.updateOne(
           { name: idName },

@@ -6,6 +6,7 @@ import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import HTTP_STATUS from '~/constants/httpStatus'
 import fs from 'fs'
 import mime from 'mime'
+import { sendFileFromS3 } from '~/utils/s3'
 
 export const uploadImageController = async (req: Request, res: Response) => {
   // bắt được error reject.
@@ -60,25 +61,25 @@ export const serveVideoStreamController = (req: Request, res: Response) => {
 
 export const serveM3u8Controller = (req: Request, res: Response) => {
   const { id } = req.params
+  sendFileFromS3(res, `video-hls/${id}/master.m3u8`)
   // trả về kết quả của file m3u8
-  return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (err) => {
-    if (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      res.status((err as any).status).send('Not found')
-    }
-  })
-  console.log('Đang đc gọi vào đây')
+  // return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8'), (err) => {
+  //   if (err) {
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     res.status((err as any).status).send('Not found')
+  //   }
+  // })
 }
 
 export const serveSegmentController = (req: Request, res: Response) => {
   const { id, v, segment } = req.params
-  // trả về kết quả của file m3u8
-  return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, v, segment), (err) => {
-    if (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      res.status((err as any).status).send('Not found')
-    }
-  })
+  sendFileFromS3(res, `video-hls/${id}/${v}/${segment}`)
+  // return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, id, v, segment), (err) => {
+  //   if (err) {
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     res.status((err as any).status).send('Not found')
+  //   }
+  // })
 }
 
 export const uploadVideoController = async (req: Request, res: Response) => {

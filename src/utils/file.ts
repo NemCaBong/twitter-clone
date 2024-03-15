@@ -105,3 +105,21 @@ export const getExtensionFromFullname = (fullname: string) => {
   namearr.shift()
   return namearr.join('')
 }
+
+export const getFilesFromDir = (dir: string, files: string[] = []) => {
+  // get an array of all files and directories in the specified directory
+  const fileList = fs.readdirSync(dir)
+  /// Create the full path of the file/directory by concatenating the passed directory and file/directory name
+  for (const file of fileList) {
+    const name = `${dir}/${file}`
+    // check if the current file/dir is a directory
+    if (fs.statSync(name).isDirectory()) {
+      // if it is a directory, call the function recursively with dir path and files array
+      getFilesFromDir(name, files)
+    } else {
+      // If it is a file, push the full path to the files array
+      files.push(name)
+    }
+  }
+  return files
+}
