@@ -15,6 +15,7 @@ import searchRouter from './routes/search.routes'
 import './utils/s3'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import Conversation from './models/schemas/Conversation.schema'
 
 // import '~/utils/fake'
 config()
@@ -62,13 +63,21 @@ io.on('connection', (socket) => {
   users[user_id] = {
     socket_id: socket.id
   }
-  socket.on('private message', (data) => {
-    const { to, content } = data
-    console.log(users)
-    const receiver_socket_id = users[to]?.socket_id
+  socket.on('private message', async (data) => {
+    const receiver_socket_id = users[data.to]?.socket_id
+    if (!receiver_socket_id) return
+
+    await databaseService.conversations.insertOne(
+      new Conversation({
+        sender_id: data.from,
+        receiver_id: data.to,
+        content: data.content
+      })
+    )
+
     socket.to(receiver_socket_id).emit('receive private message', {
       from: user_id,
-      content
+      content: data.content
     })
   })
   socket.on('disconnect', () => {
