@@ -13,6 +13,8 @@ import bookmarksRouter from './routes/bookmarks.routes'
 import likesRouter from './routes/likes.routes'
 import searchRouter from './routes/search.routes'
 import './utils/s3'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 
 // import '~/utils/fake'
 config()
@@ -28,6 +30,7 @@ databaseService.connect().then(() => {
 initFolderUploads()
 
 const app = express()
+const httpServer = createServer(app)
 app.use(cors())
 app.use(express.json())
 // routes
@@ -41,7 +44,22 @@ app.use('/bookmarks', bookmarksRouter)
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 app.use(defaultErrorHandler)
 
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log(socket.id)
+  console.log('a user connected')
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected: ', socket.id)
+  })
+})
+
 const port = process.env.PORT || 4000
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
